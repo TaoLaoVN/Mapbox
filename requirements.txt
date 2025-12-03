@@ -1,5 +1,8 @@
 streamlit
 crewai
+langchain
+langchain-core
 langchain-openai
 duckduckgo-search
 langchain-community
+pysqlite3-binary
