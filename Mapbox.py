@@ -70,17 +70,24 @@ if start_btn and google_key:
     )
 
     # Search Tool
-    search_tool = DuckDuckGoSearchRun()
-
-    # Agents
+    @tool("duckduckgo_search")
+    def duckduckgo_search(query: str):
+        """Tìm kiếm thông tin bằng DuckDuckGo."""
+        with DDGS() as ddg:
+            results = ddg.text(query, max_results=5)
+            out = "\n".join([f"- {r['title']}: {r['body']}" for r in results])
+            return out
+    
+    # Agents    
     researcher = Agent(
         role='Researcher',
         goal=f'Tìm thông tin mới nhất về {topic}',
-        backstory='Chuyên gia điều tra, tìm kiếm thông tin.',
-        tools=[search_tool],
+        backstory='Chuyên gia điều tra thông tin.',
+        tools=[duckduckgo_search],  # <--- Tool chuẩn
         allow_delegation=False,
         verbose=True,
     )
+
 
     writer = Agent(
         role='Writer',
@@ -128,3 +135,4 @@ if start_btn and google_key:
 
 elif start_btn and not google_key:
     st.error("Vui lòng nhập Google API Key!")
+
