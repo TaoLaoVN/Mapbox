@@ -2,7 +2,7 @@ import streamlit as st
 from crewai import Agent, Task, Crew, Process
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_openai import ChatOpenAI
-from langchain.callbacks.base import BaseCallbackHandler
+from langchain_core.callbacks import BaseCallbackHandler
 import time
 import os
 
@@ -136,3 +136,4 @@ if start_btn:
             
         except Exception as e:
             st.error(f"Error: {e}")
+
