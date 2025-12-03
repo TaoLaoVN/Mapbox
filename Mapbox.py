@@ -10,7 +10,7 @@ from langchain_core.callbacks import BaseCallbackHandler
 import time
 import os
 
-# --- 1. SETUP CLASS CALLBACK ---
+# --- 1. CALLBACK STREAMLIT ---
 class StreamlitCallbackHandler(BaseCallbackHandler):
     def __init__(self, container):
         self.container = container
@@ -27,7 +27,9 @@ class StreamlitCallbackHandler(BaseCallbackHandler):
         self._append_text(f"\n[🛠️ TOOL]: {serialized.get('name')} > {input_str}\n")
 
     def on_tool_end(self, output, **kwargs):
-        display_out = output[:200] + "..." if len(output) > 200 else output
+        display_out = str(output)
+        if len(display_out) > 200:
+            display_out = display_out[:200] + "..."
         self._append_text(f"   > Result: {display_out}\n")
 
     def on_agent_action(self, action, **kwargs):
@@ -36,75 +38,77 @@ class StreamlitCallbackHandler(BaseCallbackHandler):
     def on_chain_end(self, outputs, **kwargs):
         self._append_text(f"\n[✅ DONE]: Hoàn thành bước xử lý.\n")
 
-# --- 2. STREAMLIT APP UI ---
+
+# ------------------------------
+# 2. STREAMLIT UI
+# ------------------------------
 st.set_page_config(page_title="AI Arena", layout="wide")
 st.title("🤖 Autonomous AI Agents Arena")
 
-# Input Key và Chủ đề
 with st.sidebar:
     st.header("Cấu hình")
-    # Nếu bạn có key trong st.secrets thì dùng, không thì hiện ô nhập
     google_key = st.text_input("Google Gemini Key:", type="password")
     topic = st.text_input("Chủ đề:", "Tương lai của AI")
     start_btn = st.button("🚀 Chạy ngay")
 
-# --- 3. MAIN LOGIC ---
+
+# ------------------------------
+# 3. MAIN LOGIC
+# ------------------------------
 if start_btn and google_key:
     st.subheader("🖥️ Terminal Output")
     terminal_placeholder = st.empty()
     
-    # Khởi tạo Callback
+    # Callback
     st_callback = StreamlitCallbackHandler(terminal_placeholder)
 
-    # 1. Khởi tạo LLM (Google Gemini)
+    # Google LLM
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
         google_api_key=google_key,
-        temperature=0.7,
-        callbacks=[st_callback]
+        temperature=0.7
     )
 
-    # 2. Khởi tạo Tool (DuckDuckGo) - Đã sửa lỗi thụt đầu dòng ở đây
+    # Search Tool
     search_tool = DuckDuckGoSearchRun()
 
-    # 3. Định nghĩa Agents
+    # Agents
     researcher = Agent(
         role='Researcher',
-        goal=f'Tìm kiếm thông tin về {topic}',
-        backstory='Chuyên gia tìm kiếm thông tin.',
+        goal=f'Tìm thông tin mới nhất về {topic}',
+        backstory='Chuyên gia điều tra, tìm kiếm thông tin.',
         tools=[search_tool],
-        llm=llm,
+        allow_delegation=False,
         verbose=True,
-        callbacks=[st_callback]
     )
 
     writer = Agent(
         role='Writer',
-        goal=f'Viết bài ngắn về {topic}',
-        backstory='Nhà văn viết nội dung tóm tắt súc tích.',
-        llm=llm,
+        goal=f'Viết bài báo súc tích về {topic}',
+        backstory='Nhà văn chuyên tổng hợp thông tin.',
+        allow_delegation=False,
         verbose=True,
-        callbacks=[st_callback]
     )
 
-    # 4. Định nghĩa Tasks
+    # Tasks
     task1 = Task(
-        description=f"Tìm kiếm thông tin quan trọng nhất về: {topic}",
-        expected_output="Gạch đầu dòng các ý chính.",
+        description=f"Tìm kiếm và trích xuất các thông tin quan trọng nhất về: {topic}.",
+        expected_output="Danh sách bullet gọn gàng.",
         agent=researcher
     )
 
     task2 = Task(
-        description="Tổng hợp thông tin trên thành một đoạn văn ngắn.",
-        expected_output="Đoạn văn khoảng 100 từ.",
+        description="Dùng kết quả của task trước để viết 1 đoạn văn 100 từ.",
+        expected_output="Đoạn văn hoàn chỉnh.",
         agent=writer
     )
 
-    # 5. Chạy Crew
     crew = Crew(
         agents=[researcher, writer],
         tasks=[task1, task2],
-        process=Process.sequential
+        process=Process.sequential,
+        llm=llm,
+        callbacks=[st_callback]
     )
 
     with st.spinner('Đang chạy...'):
@@ -112,9 +116,15 @@ if start_btn and google_key:
             result = crew.kickoff()
             st.success("Hoàn thành!")
             st.markdown("### 📝 Kết quả:")
-            st.write(result)
+            
+            if hasattr(result, "output"):
+                st.write(result.output)
+            else:
+                st.write(str(result))
+
         except Exception as e:
             st.error(f"Lỗi: {e}")
+
 
 elif start_btn and not google_key:
     st.error("Vui lòng nhập Google API Key!")
