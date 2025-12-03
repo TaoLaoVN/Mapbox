@@ -9,6 +9,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.callbacks import BaseCallbackHandler
 import time
 import os
+from crewai.tools import tool
+from duckduckgo_search import DDGS
+
 
 # --- 1. CALLBACK STREAMLIT ---
 class StreamlitCallbackHandler(BaseCallbackHandler):
@@ -135,4 +138,5 @@ if start_btn and google_key:
 
 elif start_btn and not google_key:
     st.error("Vui lòng nhập Google API Key!")
+
 
