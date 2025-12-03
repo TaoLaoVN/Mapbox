@@ -8,3 +8,5 @@ langchain-community
 pysqlite3-binary
 langchain-google-genai
 duckduckgo-search
+ddgs
+
