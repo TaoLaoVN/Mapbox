@@ -7,7 +7,8 @@ from crewai import Agent, Task, Crew, Process, LLM
 from crewai.tools import tool
 from duckduckgo_search import DDGS
 from langchain_core.callbacks import BaseCallbackHandler
-
+import os
+os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
 
 # --- CALLBACK STREAMLIT LOG ---
 class StreamlitCallbackHandler(BaseCallbackHandler):
@@ -133,3 +134,4 @@ if start_btn and google_key:
 
 elif start_btn and not google_key:
     st.error("⚠️ Vui lòng nhập Google API Key!")
+
