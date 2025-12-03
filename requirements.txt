@@ -1,0 +1,5 @@
+streamlit
+crewai
+langchain-openai
+duckduckgo-search
+langchain-community
