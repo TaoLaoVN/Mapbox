@@ -1,7 +1,7 @@
 import streamlit as st
 from crewai import Agent, Task, Crew, Process
 from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.callbacks import BaseCallbackHandler
 import time
 import os
@@ -74,13 +74,15 @@ if start_btn:
     # Khởi tạo Callback Handler và truyền cái khung placeholder vào đó
     st_callback = StreamlitCallbackHandler(terminal_placeholder)
 
-    # B. Cấu hình CrewAI (Backend)
-    # Lưu ý: Cần API Key. Nếu chạy local thay bằng Ollama
-    llm = ChatOpenAI(
-        model="gpt-3.5-turbo", 
-        temperature=0.7,
-        callbacks=[st_callback] # <--- GẮN CALLBACK VÀO LLM
-    )
+# 2. Khởi tạo LLM Google Gemini
+# model="gemini-1.5-flash" là bản nhanh, rẻ (miễn phí mức cơ bản) và thông minh
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    verbose=True,
+    temperature=0.5,
+    google_api_key="AIzaSyDoQeCKhWno2H1aq9N5h2WFhPvkvw9jKxU", # Hoặc lấy từ st.secrets
+    callbacks=[st_callback] # <--- QUAN TRỌNG: Vẫn giữ callback để hiện Terminal UI
+)
     
     search_tool = DuckDuckGoSearchRun()
 
@@ -88,8 +90,8 @@ if start_btn:
     # Lưu ý quan trọng: Phải truyền callbacks vào cả Agent để bắt sự kiện Tool
     researcher = Agent(
         role='Market Analyst',
-        goal='Tìm kiếm dữ liệu thị trường chính xác',
-        backstory='Bạn là chuyên gia tài chính phố Wall.',
+        goal='Tìm kiếm dữ liệu chính xác',
+        backstory='Bạn là chuyên gia phân tích số liệu.',
         tools=[search_tool],
         llm=llm,
         verbose=True, # Bắt buộc True để sinh log
@@ -136,4 +138,5 @@ if start_btn:
             
         except Exception as e:
             st.error(f"Error: {e}")
+
 
