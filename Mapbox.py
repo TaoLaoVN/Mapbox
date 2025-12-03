@@ -78,9 +78,9 @@ if start_btn and google_key:
     # --- LLM CREWAI (không dùng LangChain) ---
     llm = LLM(
         model="gemini/gemini-1.5-flash",
-        api_key=google_key,
-        temperature=0.7,
-        callbacks=callbacks
+        temperature=0.2,
+        max_tokens=4000,
+        api_key=os.getenv("GOOGLE_API_KEY")
     )
 
     # --- AGENTS ---
@@ -134,4 +134,5 @@ if start_btn and google_key:
 
 elif start_btn and not google_key:
     st.error("⚠️ Vui lòng nhập Google API Key!")
+
 
