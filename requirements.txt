@@ -6,3 +6,4 @@ langchain-openai
 duckduckgo-search
 langchain-community
 pysqlite3-binary
+langchain-google-genai
